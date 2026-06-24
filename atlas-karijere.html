@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atlas — Karijere</title>
+
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.23.2/babel.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#f3efe7;
+    --panel:#ffffff;
+    --panel-2:#faf7f1;
+    --line:#e7e1d5;
+    --line-2:#d6cfbf;
+    --text:#23262d;
+    --muted:#7c7a72;
+    --muted-2:#a9a499;
+    --accent:#c0512c;
+    --accent-2:#d97a52;
+    --accent-soft:#f6e7df;
+    --green:#2f9e6f;
+    --amber:#b08423;
+    --red:#cf4d3a;
+    --blue:#3b6fc4;
+    --radius:16px;
+    --shadow:0 18px 44px -22px rgba(60,45,30,.32);
+    --shadow-sm:0 6px 18px -10px rgba(60,45,30,.25);
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Plus Jakarta Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;}
+  body{
+    font-family:var(--sans);
+    background:
+      radial-gradient(1100px 520px at 88% -8%, rgba(192,81,44,.07), transparent 60%),
+      radial-gradient(820px 460px at -8% 108%, rgba(59,111,196,.05), transparent 60%),
+      var(--paper);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:#fff;}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:20px;border:2px solid var(--paper);}
+  ::-webkit-scrollbar-track{background:transparent;}
+
+  .shell{display:grid;grid-template-columns:260px 1fr;min-height:100vh;}
+  @media(max-width:900px){.shell{grid-template-columns:1fr;}}
+
+  .sidebar{
+    border-right:1px solid var(--line);
+    background:linear-gradient(180deg,#fffdf9,rgba(255,253,249,.5));
+    padding:26px 18px;display:flex;flex-direction:column;gap:5px;
+    position:sticky;top:0;height:100vh;
+  }
+  @media(max-width:900px){.sidebar{position:relative;height:auto;}}
+  .brand{display:flex;align-items:center;gap:12px;padding:0 8px 24px;}
+  .brand .dot{width:36px;height:36px;border-radius:11px;
+    background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    display:grid;place-items:center;font-family:var(--serif);font-weight:600;color:#fff;font-size:19px;
+    box-shadow:0 8px 20px -7px rgba(192,81,44,.55);}
+  .brand h1{font-family:var(--serif);font-size:20px;font-weight:600;margin:0;letter-spacing:.2px;}
+  .brand span{display:block;font-size:10.5px;color:var(--muted-2);letter-spacing:.18em;text-transform:uppercase;margin-top:1px;}
+
+  .nav-label{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-2);padding:16px 12px 6px;}
+  .nav-item{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:11px;
+    color:var(--muted);font-weight:500;font-size:14px;cursor:pointer;border:1px solid transparent;
+    transition:.18s;width:100%;text-align:left;background:none;font-family:var(--sans);}
+  .nav-item:hover{color:var(--text);background:var(--panel-2);}
+  .nav-item.active{color:var(--accent);background:var(--accent-soft);border-color:rgba(192,81,44,.2);}
+  .nav-item.active .ic{color:var(--accent);}
+  .nav-item .ic{color:var(--muted-2);}
+  .nav-item:disabled{opacity:.4;cursor:not-allowed;}
+  .sidebar-foot{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);}
+
+  .main{padding:30px 40px 64px;min-width:0;}
+  @media(max-width:900px){.main{padding:22px;}}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:32px;flex-wrap:wrap;}
+  .top-actions{display:flex;align-items:center;gap:10px;position:relative;}
+
+  .iconbtn{width:40px;height:40px;border-radius:11px;border:1px solid var(--line);background:var(--panel);
+    display:grid;place-items:center;cursor:pointer;color:var(--muted);transition:.16s;}
+  .iconbtn:hover{color:var(--accent);border-color:var(--line-2);box-shadow:var(--shadow-sm);}
+  .dotsig{width:8px;height:8px;border-radius:50%;position:absolute;top:7px;right:7px;}
+  .dotsig.on{background:var(--green);}
+  .dotsig.off{background:var(--red);}
+
+  .popover{position:absolute;top:50px;right:0;width:300px;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;box-shadow:var(--shadow);padding:16px;z-index:60;}
+  .popover h4{margin:0 0 4px;font-family:var(--serif);font-size:16px;font-weight:600;}
+  .popover p{margin:0 0 12px;font-size:12px;color:var(--muted);line-height:1.5;}
+
+  .userchip{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;padding:6px 8px 6px 14px;box-shadow:var(--shadow-sm);}
+  .userchip .who{line-height:1.2;}
+  .userchip .who b{font-size:13.5px;font-weight:600;}
+  .userchip .who small{font-size:11px;color:var(--muted-2);}
+  .avatar{width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent);
+    display:grid;place-items:center;font-weight:700;font-size:14px;}
+  .role-badge{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 9px;border-radius:7px;}
+  .role-badge.admin{background:rgba(176,132,35,.14);color:var(--amber);}
+  .role-badge.candidate{background:rgba(59,111,196,.12);color:var(--blue);}
+
+  .page-head{margin-bottom:26px;}
+  .page-head h2{font-family:var(--serif);font-size:36px;font-weight:600;margin:0 0 6px;letter-spacing:-.5px;}
+  .page-head p{color:var(--muted);font-size:14.5px;margin:0;max-width:580px;line-height:1.55;}
+
+  .grid{display:grid;gap:16px;}
+  .cols-2{grid-template-columns:repeat(auto-fill,minmax(340px,1fr));}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px;transition:.2s;
+    box-shadow:var(--shadow-sm);}
+  .card.hover:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--line-2);}
+  .card h3{font-family:var(--serif);font-size:20px;font-weight:600;margin:0 0 3px;}
+  .card .sub{color:var(--muted);font-size:13px;margin-bottom:16px;}
+
+  .field{margin-bottom:14px;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px;}
+  .field input,.field select,.field textarea{width:100%;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text);border-radius:10px;padding:11px 13px;font-family:var(--sans);font-size:14px;outline:none;transition:.15s;}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);}
+  .field input[type=file]{padding:9px;cursor:pointer;}
+  .field input[type=file]::file-selector-button{background:#fff;border:1px solid var(--line-2);color:var(--text);
+    border-radius:7px;padding:6px 12px;margin-right:11px;cursor:pointer;font-family:var(--sans);font-weight:600;font-size:12px;}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media(max-width:560px){.row{grid-template-columns:1fr;}}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;cursor:pointer;
+    font-family:var(--sans);font-weight:600;font-size:14px;padding:11px 18px;border-radius:11px;transition:.16s;}
+  .btn-primary{background:linear-gradient(135deg,var(--accent),#cc6038);color:#fff;
+    box-shadow:0 10px 24px -12px rgba(192,81,44,.7);}
+  .btn-primary:hover{filter:brightness(1.05);transform:translateY(-1px);}
+  .btn-ghost{background:var(--panel);color:var(--text);border:1px solid var(--line-2);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-sm{padding:7px 13px;font-size:12.5px;border-radius:9px;}
+  .btn-danger{background:rgba(207,77,58,.1);color:var(--red);border:1px solid rgba(207,77,58,.28);}
+  .btn-danger:hover{background:rgba(207,77,58,.18);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+  .btn-block{width:100%;}
+
+  .tabs{display:inline-flex;gap:4px;background:var(--panel);border:1px solid var(--line);padding:4px;border-radius:12px;margin-bottom:22px;box-shadow:var(--shadow-sm);}
+  .tabs button{background:none;border:none;color:var(--muted);font-family:var(--sans);font-weight:600;font-size:13.5px;
+    padding:9px 17px;border-radius:9px;cursor:pointer;transition:.15s;}
+  .tabs button.active{background:var(--accent-soft);color:var(--accent);}
+
+  .advert .top{display:flex;justify-content:space-between;align-items:start;gap:12px;}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 18px;}
+  .tag{font-size:11.5px;font-weight:500;padding:5px 10px;border-radius:8px;background:var(--panel-2);
+    border:1px solid var(--line);color:var(--muted);}
+  .tag b{color:var(--text);font-weight:600;}
+
+  .status{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;border-radius:7px;}
+  .s-Pending{background:rgba(176,132,35,.15);color:var(--amber);}
+  .s-Reviewed{background:rgba(59,111,196,.13);color:var(--blue);}
+  .s-Accepted{background:rgba(47,158,111,.15);color:var(--green);}
+  .s-Rejected{background:rgba(207,77,58,.13);color:var(--red);}
+  .s-active{background:rgba(47,158,111,.15);color:var(--green);}
+
+  .toast{position:fixed;right:24px;bottom:24px;max-width:380px;z-index:80;display:flex;flex-direction:column;gap:10px;}
+  .toast .t{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:11px;padding:13px 16px;box-shadow:var(--shadow);animation:slidein .25s ease;}
+  .toast .t.ok{border-left-color:var(--green);}
+  .toast .t.err{border-left-color:var(--red);}
+  .toast .t b{display:block;font-size:13px;margin-bottom:2px;}
+  .toast .t span{font-size:12.5px;color:var(--muted);line-height:1.45;}
+  @keyframes slidein{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+  .empty{text-align:center;padding:64px 20px;color:var(--muted-2);}
+  .empty .big{font-family:var(--serif);font-size:46px;opacity:.35;margin-bottom:8px;}
+
+  .loader{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;}
+  .loader.dark{border-color:rgba(192,81,44,.25);border-top-color:var(--accent);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .fade{animation:fade .4s ease;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+
+  .hero{background:linear-gradient(135deg,#fff,var(--panel-2));border:1px solid var(--line);border-radius:20px;
+    padding:34px 32px;margin-bottom:26px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm);}
+  .hero h2{font-family:var(--serif);font-size:32px;font-weight:600;margin:0 0 8px;letter-spacing:-.5px;}
+  .hero p{color:var(--muted);font-size:15px;margin:0;max-width:480px;line-height:1.55;}
+  .hero .deco{position:absolute;right:-40px;top:-40px;width:200px;height:200px;border-radius:50%;
+    background:radial-gradient(circle,var(--accent-soft),transparent 70%);}
+
+  .list-item{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 18px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;transition:.15s;box-shadow:var(--shadow-sm);}
+  .list-item:hover{border-color:var(--line-2);}
+  .list-item .lead b{font-family:var(--serif);font-size:16px;font-weight:600;}
+  .list-item .lead small{display:block;color:var(--muted-2);font-size:12px;margin-top:2px;}
+
+  details.adv{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;margin-top:14px;overflow:hidden;}
+  details.adv summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:13px;color:var(--accent);list-style:none;}
+  details.adv summary::-webkit-details-marker{display:none;}
+  details.adv .body{padding:0 16px 16px;border-top:1px solid var(--line);padding-top:14px;}
+
+  hr.sep{border:none;border-top:1px solid var(--line);margin:18px 0;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback } = React;
+
+function decodeJwt(token){
+  try{
+    const p = JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));
+    let role=null,name=null,id=null;
+    for(const k in p){
+      const kl=k.toLowerCase();
+      if(kl.endsWith('/role')||kl==='role') role=Array.isArray(p[k])?p[k][0]:p[k];
+      if(kl.endsWith('/name')||kl==='name'||kl.endsWith('emailaddress')||kl==='email') name=name||p[k];
+      if(kl.endsWith('nameidentifier')||kl==='sub') id=p[k];
+    }
+    return {role,name,id,exp:p.exp};
+  }catch(e){ return null; }
+}
+const STATUS=[{v:0,label:'Pending'},{v:1,label:'Reviewed'},{v:2,label:'Accepted'},{v:3,label:'Rejected'}];
+const STATUS_NAME={0:'Pending',1:'Reviewed',2:'Accepted',3:'Rejected'};
+const ITYPE=[{v:0,label:'Online'},{v:1,label:'InPerson'}];
+
+const Ic=({d})=>(<svg className="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="18" height="18"><path d={d}/></svg>);
+const icons={
+  login:"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3",
+  list:"M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
+  doc:"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6",
+  cog:"M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z",
+  inbox:"M22 12h-6l-2 3h-4l-2-3H2M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z",
+};
+
+function App(){
+  const [api,setApi]=useState(localStorage.getItem('apiBase')||'https://localhost:7001');
+  const [token,setToken]=useState(localStorage.getItem('token')||'');
+  const [user,setUser]=useState(()=>token?decodeJwt(token):null);
+  const [view,setView]=useState('adverts');
+  const [toasts,setToasts]=useState([]);
+
+  useEffect(()=>{ localStorage.setItem('apiBase',api); },[api]);
+  useEffect(()=>{
+    if(token){ localStorage.setItem('token',token); setUser(decodeJwt(token)); }
+    else { localStorage.removeItem('token'); setUser(null); }
+  },[token]);
+
+  const notify=useCallback((title,msg,kind)=>{
+    const id=Math.random();
+    setToasts(t=>[...t,{id,title,msg,kind}]);
+    setTimeout(()=>setToasts(t=>t.filter(x=>x.id!==id)),4200);
+  },[]);
+
+  const call=useCallback(async(method,path,opts={})=>{
+    const headers={};
+    if(token) headers['Authorization']='Bearer '+token;
+    let body;
+    if(opts.form){ body=opts.form; }
+    else if(opts.json!==undefined){ headers['Content-Type']='application/json'; body=JSON.stringify(opts.json); }
+    const res=await fetch(api+path,{method,headers,body});
+    const text=await res.text();
+    let data; try{ data=text?JSON.parse(text):null; }catch{ data=text; }
+    if(!res.ok){
+      const m=(data&&(data.message||data.title))||(typeof data==='string'&&data)||('HTTP '+res.status);
+      const err=new Error(m); err.status=res.status; err.data=data; throw err;
+    }
+    return data;
+  },[api,token]);
+
+  const role=user?.role, logged=!!token;
+
+  return (
+    <div className="shell">
+      <aside className="sidebar">
+        <div className="brand">
+          <div className="dot">A</div>
+          <div><h1>Atlas</h1><span>Karijere</span></div>
+        </div>
+
+        <div className="nav-label">Poslovi</div>
+        <button className={"nav-item"+(view==='adverts'?' active':'')} onClick={()=>setView('adverts')}>
+          <Ic d={icons.list}/> Oglasi
+        </button>
+        {role==='Candidate' &&
+          <button className={"nav-item"+(view==='mine'?' active':'')} onClick={()=>setView('mine')}>
+            <Ic d={icons.doc}/> Moje prijave
+          </button>}
+
+        {role==='Admin' && <>
+          <div className="nav-label">Administracija</div>
+          <button className={"nav-item"+(view==='admin-adv'?' active':'')} onClick={()=>setView('admin-adv')}>
+            <Ic d={icons.cog}/> Oglasi
+          </button>
+          <button className={"nav-item"+(view==='admin-apps'?' active':'')} onClick={()=>setView('admin-apps')}>
+            <Ic d={icons.inbox}/> Prijave
+          </button>
+        </>}
+
+        {!logged && <>
+          <div className="nav-label">Nalog</div>
+          <button className={"nav-item"+(view==='auth'?' active':'')} onClick={()=>setView('auth')}>
+            <Ic d={icons.login}/> Prijava
+          </button>
+        </>}
+
+        <div className="sidebar-foot"></div>
+      </aside>
+
+      <main className="main">
+        <TopBar api={api} setApi={setApi} user={user} logged={logged} call={call} notify={notify}
+                onLogout={()=>{setToken('');setView('adverts');}} goLogin={()=>setView('auth')} />
+        <div className="fade" key={view}>
+          {view==='auth'      && <AuthView call={call} notify={notify} setToken={setToken} goto={setView} />}
+          {view==='adverts'   && <AdvertsView call={call} notify={notify} role={role} logged={logged} goLogin={()=>setView('auth')} />}
+          {view==='mine'      && <MyApps call={call} notify={notify} />}
+          {view==='admin-adv' && <AdminAdverts call={call} notify={notify} />}
+          {view==='admin-apps'&& <AdminApps call={call} notify={notify} />}
+        </div>
+      </main>
+
+      <div className="toast">
+        {toasts.map(t=>(<div key={t.id} className={"t "+(t.kind||'')}><b>{t.title}</b><span>{t.msg}</span></div>))}
+      </div>
+    </div>
+  );
+}
+
+function TopBar({api,setApi,user,logged,call,notify,onLogout,goLogin}){
+  const [open,setOpen]=useState(false);
+  const [status,setStatus]=useState('idle');
+  const test=async()=>{ setStatus('test');
+    try{ await call('GET','/job-adverts'); setStatus('ok'); notify('Povezano','Server je dostupan.','ok'); }
+    catch(e){ setStatus('off'); notify('Veza neuspešna',e.message,'err'); } };
+  return (
+    <div className="topbar">
+      <div style={{fontSize:13,color:'var(--muted)'}}>Dobar dan{user?.name?', '+user.name.split('@')[0]:''} 👋</div>
+      <div className="top-actions">
+        {logged && user ? (
+          <div className="userchip">
+            <div className="avatar">{(user.name||'?').charAt(0).toUpperCase()}</div>
+            <div className="who"><b>{user.name}</b><small>prijavljen</small></div>
+            <span className={"role-badge "+(user.role==='Admin'?'admin':'candidate')}>{user.role||'?'}</span>
+            <button className="btn btn-ghost btn-sm" onClick={onLogout}>Odjava</button>
+          </div>
+        ) : (
+          <button className="btn btn-primary btn-sm" onClick={goLogin}>Prijava</button>
+        )}
+        <button className="iconbtn" onClick={()=>setOpen(o=>!o)} title="Podešavanja">
+          <Ic d={icons.cog}/>
+          <span className={"dotsig "+(status==='ok'?'on':status==='off'?'off':'')}></span>
+        </button>
+        {open && (
+          <div className="popover" onMouseLeave={()=>setOpen(false)}>
+            <h4>Server</h4>
+            <p>Adresa API servera.</p>
+            <div className="field" style={{margin:'0 0 10px'}}>
+              <input value={api} onChange={e=>setApi(e.target.value.replace(/\/+$/,''))} placeholder="https://localhost:7001"/>
+            </div>
+            <button className="btn btn-ghost btn-block btn-sm" onClick={test}>
+              {status==='test'?<span className="loader dark"></span>:'Proveri vezu'}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AuthView({call,notify,setToken,goto}){
+  const [tab,setTab]=useState('login');
+  const [login,setLogin]=useState({email:'',password:''});
+  const [reg,setReg]=useState({email:'',password:'',firstName:'',lastName:'',phone:'',dateOfBirth:'2000-01-01'});
+  const [busy,setBusy]=useState(false);
+
+  const doLogin=async()=>{ setBusy(true);
+    try{
+      const r=await call('POST','/auth/login',{json:login});
+      setToken(r.token); notify('Dobrodošli','Uspešno ste prijavljeni.','ok');
+      const d=decodeJwt(r.token); goto(d?.role==='Admin'?'admin-adv':'adverts');
+    }catch(e){ notify('Prijava neuspešna',e.message,'err'); } finally{ setBusy(false); } };
+
+  const doReg=async()=>{ setBusy(true);
+    try{
+      await call('POST','/auth/register',{json:{...reg,dateOfBirth:new Date(reg.dateOfBirth).toISOString()}});
+      notify('Nalog kreiran','Možete se prijaviti.','ok');
+      setLogin({email:reg.email,password:reg.password}); setTab('login');
+    }catch(e){
+      const d=e.data; const msg=Array.isArray(d)?d.map(x=>x.description).join(' '):e.message;
+      notify('Registracija neuspešna',msg,'err');
+    } finally{ setBusy(false); } };
+
+  return (
+    <div>
+      <div className="hero"><div className="deco"></div>
+        <h2>Tvoja sledeća prilika počinje ovde</h2>
+        <p>Prijavi se na nalog ili napravi novi i počni da se prijavljuješ na oglase za posao i praksu.</p>
+      </div>
+
+      <div className="tabs">
+        <button className={tab==='login'?'active':''} onClick={()=>setTab('login')}>Prijava</button>
+        <button className={tab==='reg'?'active':''} onClick={()=>setTab('reg')}>Novi nalog</button>
+      </div>
+
+      <div style={{maxWidth:460}}>
+      {tab==='login' ? (
+        <div className="card">
+          <h3>Prijava</h3><div className="sub">Unesi svoje podatke za pristup.</div>
+          <div className="field"><label>Email</label>
+            <input value={login.email} onChange={e=>setLogin({...login,email:e.target.value})} placeholder="ime@primer.com"/></div>
+          <div className="field"><label>Lozinka</label>
+            <input type="password" value={login.password} onChange={e=>setLogin({...login,password:e.target.value})} placeholder="••••••••"/></div>
+          <button className="btn btn-primary btn-block" onClick={doLogin} disabled={busy}>{busy?<span className="loader"></span>:'Prijavi se'}</button>
+        </div>
+      ) : (
+        <div className="card">
+          <h3>Napravi nalog</h3><div className="sub">Registracija novog kandidata.</div>
+          <div className="row">
+            <div className="field"><label>Ime</label><input value={reg.firstName} onChange={e=>setReg({...reg,firstName:e.target.value})}/></div>
+            <div className="field"><label>Prezime</label><input value={reg.lastName} onChange={e=>setReg({...reg,lastName:e.target.value})}/></div>
+          </div>
+          <div className="field"><label>Email</label><input value={reg.email} onChange={e=>setReg({...reg,email:e.target.value})}/></div>
+          <div className="field"><label>Lozinka</label><input type="password" value={reg.password} onChange={e=>setReg({...reg,password:e.target.value})}/></div>
+          <div className="row">
+            <div className="field"><label>Telefon</label><input value={reg.phone} onChange={e=>setReg({...reg,phone:e.target.value})}/></div>
+            <div className="field"><label>Datum rođenja</label><input type="date" value={reg.dateOfBirth} onChange={e=>setReg({...reg,dateOfBirth:e.target.value})}/></div>
+          </div>
+          <button className="btn btn-primary btn-block" onClick={doReg} disabled={busy}>{busy?<span className="loader"></span>:'Registruj se'}</button>
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}
+
+function AdvertsView({call,notify,role,logged,goLogin}){
+  const [adverts,setAdverts]=useState(null);
+  const [detail,setDetail]=useState(null);
+  const [applyFor,setApplyFor]=useState(null);
+
+  const load=async()=>{ setAdverts(null);
+    try{ setAdverts(await call('GET','/job-adverts')); }catch(e){ notify('Greška',e.message,'err'); setAdverts([]); } };
+  useEffect(()=>{ load(); },[]);
+  const openDetail=async(id)=>{ try{ setDetail(await call('GET','/job-adverts/'+id)); }catch(e){ notify('Greška',e.message,'err'); } };
+
+  return (
+    <div>
+      <div className="hero"><div className="deco"></div>
+        <h2>Otvoreni oglasi</h2>
+        <p>Istraži aktuelne pozicije za posao i praksu i prijavi se u par klikova.</p>
+      </div>
+
+      {adverts===null && <div className="empty"><span className="loader dark" style={{margin:'0 auto'}}></span></div>}
+      {adverts && adverts.length===0 && <div className="empty"><div className="big">∅</div>Trenutno nema otvorenih oglasa.</div>}
+
+      <div className="grid cols-2">
+        {adverts && adverts.map(a=>(
+          <div className="card hover advert" key={a.id}>
+            <div className="top">
+              <div><h3>{a.positionTitle}</h3><div className="sub" style={{margin:0}}>{a.companyName}</div></div>
+              <span className="status s-active">otvoren</span>
+            </div>
+            <div className="meta">
+              <span className="tag">rok: <b>{new Date(a.deadline).toLocaleDateString('sr-RS')}</b></span>
+              <span className="tag">mesta: <b>{a.numberOfOpenings}</b></span>
+            </div>
+            <div style={{display:'flex',gap:9}}>
+              <button className="btn btn-ghost btn-sm" onClick={()=>openDetail(a.id)}>Detalji</button>
+              <button className="btn btn-primary btn-sm" onClick={()=> role==='Candidate'?setApplyFor(a):(logged?notify('Samo kandidati','Prijava na oglas je za kandidate.','err'):goLogin())}>
+                Prijavi se
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {detail && <DetailModal d={detail} onClose={()=>setDetail(null)} />}
+      {applyFor && <ApplyModal advert={applyFor} call={call} notify={notify} onClose={()=>setApplyFor(null)} />}
+    </div>
+  );
+}
+
+function DetailModal({d,onClose}){
+  return (
+    <Modal onClose={onClose} title={d.positionTitle} subtitle={d.companyName}>
+      <div className="meta">
+        <span className="tag">mesta: <b>{d.numberOfOpenings}</b></span>
+        <span className="tag">početak: <b>{new Date(d.startDate).toLocaleDateString('sr-RS')}</b></span>
+        <span className="tag">rok: <b>{new Date(d.deadline).toLocaleDateString('sr-RS')}</b></span>
+      </div>
+      <hr className="sep"/>
+      <p style={{color:'var(--muted)',fontSize:14,lineHeight:1.6}}>{d.positionDescription||'—'}</p>
+      <div className="field" style={{marginTop:8}}><label>Uslovi</label>
+        <div style={{color:'var(--text)',fontSize:14}}>{d.requirements||'—'}</div></div>
+    </Modal>
+  );
+}
+
+function ApplyModal({advert,call,notify,onClose}){
+  const [cv,setCv]=useState(null),[cover,setCover]=useState(null),[busy,setBusy]=useState(false);
+  const submit=async()=>{
+    if(!cv){ notify('CV je obavezan','Priloži CV fajl.','err'); return; }
+    setBusy(true);
+    try{
+      const fd=new FormData(); fd.append('jobAdvertId',advert.id); fd.append('cv',cv); if(cover) fd.append('coverLetter',cover);
+      const r=await call('POST','/applications',{form:fd});
+      notify('Prijava poslata',(r&&r.message)||'Uspešno.','ok'); onClose();
+    }catch(e){ notify('Greška',e.message,'err'); } finally{ setBusy(false); }
+  };
+  return (
+    <Modal onClose={onClose} title="Prijava na oglas" subtitle={advert.positionTitle+' · '+advert.companyName}>
+      <div className="field"><label>CV</label><input type="file" onChange={e=>setCv(e.target.files[0])}/></div>
+      <div className="field"><label>Propratno pismo (opciono)</label><input type="file" onChange={e=>setCover(e.target.files[0])}/></div>
+      <button className="btn btn-primary btn-block" onClick={submit} disabled={busy}>{busy?<span className="loader"></span>:'Pošalji prijavu'}</button>
+    </Modal>
+  );
+}
+
+function MyApps({call,notify}){
+  const [apps,setApps]=useState(null);
+  const load=async()=>{ setApps(null);
+    try{ setApps(await call('GET','/applications/my')); }catch(e){ notify('Greška',e.message,'err'); setApps([]); } };
+  useEffect(()=>{ load(); },[]);
+  return (
+    <div>
+      <div className="page-head"><h2>Moje prijave</h2><p>Pregled svih tvojih prijava i njihovog statusa.</p></div>
+      {apps===null && <div className="empty"><span className="loader dark" style={{margin:'0 auto'}}></span></div>}
+      {apps && apps.length===0 && <div className="empty"><div className="big">∅</div>Još nemaš nijednu prijavu.</div>}
+      {apps && apps.map(a=>(
+        <div className="list-item" key={a.id}>
+          <div className="lead"><b>{a.positionTitle}</b><small>{a.companyName} · {new Date(a.appliedAt).toLocaleDateString('sr-RS')}</small></div>
+          <span className={"status s-"+a.status}>{a.status}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function useLookup(call,path){
+  const [data,setData]=React.useState(null);
+  React.useEffect(()=>{ let on=true;
+    call('GET',path).then(d=>{ if(on) setData(d||[]); }).catch(()=>{ if(on) setData([]); });
+    return ()=>{on=false;};
+  },[path]);
+  return data;
+}
+
+function AdminAdverts({call,notify}){
+  const companies=useLookup(call,'/companies');
+  const positions=useLookup(call,'/job-positions');
+  const [form,setForm]=useState({companyId:'',jobPositionId:'',startDate:'2026-06-10',deadline:'2026-07-10',numberOfOpenings:3});
+  const [busy,setBusy]=useState(false),[adverts,setAdverts]=useState(null),[edit,setEdit]=useState(null);
+  const load=async()=>{ try{ setAdverts(await call('GET','/job-adverts')); }catch(e){ setAdverts([]); } };
+  useEffect(()=>{ load(); },[]);
+
+  // podrazumevano izaberi prvu firmu/poziciju kad se ucitaju
+  useEffect(()=>{ if(companies&&companies.length&&!form.companyId) setForm(f=>({...f,companyId:companies[0].id})); },[companies]);
+  useEffect(()=>{ if(positions&&positions.length&&!form.jobPositionId) setForm(f=>({...f,jobPositionId:positions[0].id})); },[positions]);
+
+  const create=async()=>{
+    if(!form.companyId||!form.jobPositionId){ notify('Izaberi','Izaberi firmu i poziciju.','err'); return; }
+    setBusy(true);
+    try{
+      await call('POST','/job-adverts',{json:{companyId:+form.companyId,jobPositionId:+form.jobPositionId,
+        startDate:new Date(form.startDate).toISOString(),deadline:new Date(form.deadline).toISOString(),numberOfOpenings:+form.numberOfOpenings}});
+      notify('Oglas objavljen','Novi oglas je dodat.','ok'); load();
+    }catch(e){ notify('Greška',e.message,'err'); } finally{ setBusy(false); } };
+  const deactivate=async(id)=>{ try{ await call('PATCH','/job-adverts/'+id+'/deactivate'); notify('Zatvoreno','Oglas je zatvoren.','ok'); load(); }catch(e){ notify('Greška',e.message,'err'); } };
+
+  return (
+    <div>
+      <div className="page-head"><h2>Oglasi</h2><p>Objavljivanje, izmena i zatvaranje oglasa.</p></div>
+      <div className="grid" style={{gridTemplateColumns:'minmax(320px,420px) 1fr',alignItems:'start',gap:20}}>
+        <div className="card">
+          <h3>Novi oglas</h3><div className="sub">Izaberi firmu i poziciju, pa objavi.</div>
+          <div className="field"><label>Firma</label>
+            <select value={form.companyId} onChange={e=>setForm({...form,companyId:e.target.value})}>
+              {companies===null && <option>učitavanje…</option>}
+              {companies && companies.map(c=><option key={c.id} value={c.id}>{c.name} — {c.city}</option>)}
+            </select></div>
+          <div className="field"><label>Pozicija</label>
+            <select value={form.jobPositionId} onChange={e=>setForm({...form,jobPositionId:e.target.value})}>
+              {positions===null && <option>učitavanje…</option>}
+              {positions && positions.map(p=><option key={p.id} value={p.id}>{p.title} ({p.type})</option>)}
+            </select></div>
+          <div className="row">
+            <div className="field"><label>Početak</label><input type="date" value={form.startDate} onChange={e=>setForm({...form,startDate:e.target.value})}/></div>
+            <div className="field"><label>Rok</label><input type="date" value={form.deadline} onChange={e=>setForm({...form,deadline:e.target.value})}/></div>
+          </div>
+          <div className="field"><label>Broj mesta</label><input type="number" value={form.numberOfOpenings} onChange={e=>setForm({...form,numberOfOpenings:e.target.value})}/></div>
+          <button className="btn btn-primary btn-block" onClick={create} disabled={busy}>{busy?<span className="loader"></span>:'Objavi oglas'}</button>
+        </div>
+        <div>
+          {adverts===null && <div className="empty"><span className="loader dark" style={{margin:'0 auto'}}></span></div>}
+          {adverts && adverts.length===0 && <div className="empty"><div className="big">∅</div>Nema otvorenih oglasa.</div>}
+          {adverts && adverts.map(a=>(
+            <div className="list-item" key={a.id}>
+              <div className="lead"><b>{a.positionTitle}</b><small>{a.companyName} · {a.numberOfOpenings} mesta</small></div>
+              <div style={{display:'flex',gap:8}}>
+                <button className="btn btn-ghost btn-sm" onClick={()=>setEdit({id:a.id,title:a.positionTitle,jobPositionId:'',numberOfOpenings:'',deadline:''})}>Izmeni</button>
+                <button className="btn btn-danger btn-sm" onClick={()=>deactivate(a.id)}>Zatvori</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {edit && <EditAdvert edit={edit} setEdit={setEdit} positions={positions} call={call} notify={notify} onDone={load}/>}
+    </div>
+  );
+}
+
+function EditAdvert({edit,setEdit,positions,call,notify,onDone}){
+  const [busy,setBusy]=useState(false);
+  const save=async()=>{ setBusy(true);
+    const body={id:edit.id};
+    if(edit.jobPositionId!=='') body.jobPositionId=+edit.jobPositionId;
+    if(edit.numberOfOpenings!=='') body.numberOfOpenings=+edit.numberOfOpenings;
+    if(edit.deadline!=='') body.deadline=new Date(edit.deadline).toISOString();
+    try{ await call('PUT','/job-adverts/'+edit.id,{json:body}); notify('Izmenjeno','Oglas je ažuriran.','ok'); setEdit(null); onDone(); }
+    catch(e){ notify('Greška',e.message,'err'); } finally{ setBusy(false); } };
+  return (
+    <Modal onClose={()=>setEdit(null)} title={"Izmena: "+edit.title} subtitle="Promeni samo ono što želiš">
+      <div className="field"><label>Nova pozicija</label>
+        <select value={edit.jobPositionId} onChange={e=>setEdit({...edit,jobPositionId:e.target.value})}>
+          <option value="">— bez izmene —</option>
+          {positions && positions.map(p=><option key={p.id} value={p.id}>{p.title} ({p.type})</option>)}
+        </select></div>
+      <div className="field"><label>Broj mesta</label><input type="number" value={edit.numberOfOpenings} onChange={e=>setEdit({...edit,numberOfOpenings:e.target.value})} placeholder="bez izmene"/></div>
+      <div className="field"><label>Novi rok</label><input type="date" value={edit.deadline} onChange={e=>setEdit({...edit,deadline:e.target.value})}/></div>
+      <button className="btn btn-primary btn-block" onClick={save} disabled={busy}>{busy?<span className="loader"></span>:'Sačuvaj'}</button>
+    </Modal>
+  );
+}
+
+function AdminApps({call,notify}){
+  const adverts=useLookup(call,'/job-adverts/all');
+  const [advertId,setAdvertId]=useState('');
+  const [apps,setApps]=useState(null);
+  const [interviewFor,setInterviewFor]=useState(null);
+  const [screeningReport,setScreeningReport]=useState(null);  // izvestaj za jednog
+  const [rankingResult,setRankingResult]=useState(null);      // rang lista za oglas
+  const [screeningBusy,setScreeningBusy]=useState(false);
+  const [rankingBusy,setRankingBusy]=useState(false);
+
+  const load=async(id)=>{ const target=id??advertId; if(!target){ notify('Izaberi oglas','Izaberi oglas iz liste.','err'); return; } setApps(null);
+    try{ setApps(await call('GET','/applications/by-advert/'+target)); }catch(e){ notify('Greška',e.message,'err'); setApps([]); } };
+  const changeStatus=async(id,val)=>{ try{ await call('PATCH','/applications/'+id+'/status',{json:+val}); notify('Status ažuriran','Prijava #'+id+' → '+STATUS_NAME[val],'ok'); load(); }catch(e){ notify('Greška',e.message,'err'); } };
+  const delInterview=async(id)=>{ try{ await call('DELETE','/interviews/'+id); notify('Uklonjeno','Intervju je obrisan.','ok'); load(); }catch(e){ notify('Greška',e.message,'err'); } };
+
+  // screeniraj jednog kandidata
+  const screenOne=async(appId)=>{ setScreeningBusy(appId);
+    try{
+      const r=await call('POST','/screening/application/'+appId);
+      setScreeningReport(r); 
+    }catch(e){ notify('Screening greška',e.message,'err'); } 
+    finally{ setScreeningBusy(false); } };
+
+  // screeniraj sve prijave za oglas
+  const screenAll=async()=>{ setRankingBusy(true); setRankingResult(null);
+    try{
+      const r=await call('POST','/screening/advert/'+advertId);
+      setRankingResult(r);
+    }catch(e){ notify('Screening greška',e.message,'err'); }
+    finally{ setRankingBusy(false); } };
+
+  const verdiktBoja={'shortlist':'var(--green)','maybe':'var(--amber)','reject':'var(--red)'};
+  const verdiktEmoji={'shortlist':'✅','maybe':'🟡','reject':'❌'};
+
+  return (
+    <div>
+      <div className="page-head"><h2>Prijave</h2><p>Izaberi oglas da vidiš prijave, menjaj status i upravljaj intervjuima.</p></div>
+      <div className="card" style={{marginBottom:20,display:'flex',gap:12,alignItems:'flex-end',maxWidth:640,flexWrap:'wrap'}}>
+        <div className="field" style={{flex:1,margin:0}}><label>Oglas</label>
+          <select value={advertId} onChange={e=>{ setAdvertId(e.target.value); setRankingResult(null); if(e.target.value) load(e.target.value); }}>
+            <option value="">— izaberi oglas —</option>
+            {adverts && adverts.map(a=><option key={a.id} value={a.id}>{a.positionTitle} — {a.companyName}</option>)}
+          </select></div>
+        <button className="btn btn-primary" onClick={()=>load()}>Osveži</button>
+        {advertId && <button className="btn btn-ghost" onClick={screenAll} disabled={rankingBusy} style={{borderColor:'var(--accent)',color:'var(--accent)'}}>
+          {rankingBusy?<><span className="loader dark"></span> Analiziram...</>:'🤖 Analiziraj sve prijave'}
+        </button>}
+      </div>
+
+      {/* RANG LISTA (screen-all rezultat) */}
+      {rankingResult && (
+        <div className="card" style={{marginBottom:20,background:'linear-gradient(135deg,#fff,var(--panel-2))'}}>
+          <h3 style={{fontFamily:'var(--serif)',marginBottom:4}}>🏆 Rang lista kandidata</h3>
+          <div className="sub">AI screening — automatska procena svih prijava</div>
+          <div style={{marginBottom:16}}>
+            {rankingResult.ranglista.map((item,i)=>(
+              <div key={i} style={{padding:'12px 0',borderBottom:'1px solid var(--line)'}}>
+                <div style={{display:'flex',alignItems:'center',gap:12}}>
+                  <span style={{fontWeight:700,fontSize:18,color:'var(--muted-2)',width:28}}>#{i+1}</span>
+                  <div style={{flex:1}}>
+                    <div style={{fontWeight:600,fontSize:14}}>
+                      {item.ime_kandidata || item.cv_path.split('/').pop().split('\\').pop()}
+                    </div>
+                    <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>
+                      {item.ocena.seniority} · {item.ocena.years_experience} god. iskustva
+                    </div>
+                  </div>
+                  <div style={{textAlign:'right'}}>
+                    <div style={{fontWeight:700,fontSize:16}}>{item.ocena.match_score}/100</div>
+                    <div style={{fontSize:12,fontWeight:700,color:verdiktBoja[item.ocena.verdict]}}>
+                      {verdiktEmoji[item.ocena.verdict]} {item.ocena.verdict}
+                    </div>
+                  </div>
+                </div>
+                <div style={{marginLeft:40,marginTop:6,fontSize:12,color:'var(--muted)',lineHeight:1.5}}>
+                  {item.ocena.summary}
+                </div>
+                {item.ocena.concerns?.length>0 && (
+                  <div style={{marginLeft:40,marginTop:4,fontSize:12,color:'var(--amber)'}}>
+                    {item.ocena.concerns.map((c,j)=><span key={j}>⚠ {c}{'  '}</span>)}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div style={{background:'var(--accent-soft)',borderRadius:10,padding:14}}>
+            <div style={{fontSize:12,fontWeight:700,color:'var(--accent)',marginBottom:6}}>HR PREPORUKA</div>
+            <div style={{fontSize:13,lineHeight:1.7,whiteSpace:'pre-line'}}>{rankingResult.hr_preporuka}</div>
+          </div>
+        </div>
+      )}
+
+      {apps===null && advertId && <div className="empty"><span className="loader dark" style={{margin:'0 auto'}}></span></div>}
+      {apps && apps.length===0 && <div className="empty"><div className="big">∅</div>Nema prijava za ovaj oglas.</div>}
+
+      {apps && apps.map(a=>(
+        <div className="card" key={a.id} style={{marginBottom:12}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:14,flexWrap:'wrap'}}>
+            <div className="lead">
+              <b style={{fontFamily:'var(--serif)',fontSize:16}}>{a.candidateName || `Prijava #${a.id}`}</b>
+              <small style={{display:'block',color:'var(--muted-2)',fontSize:12,marginTop:2}}>
+                {new Date(a.appliedAt).toLocaleDateString('sr-RS')} · {a.documentsCount} dokumenata
+              </small>
+            </div>
+            <div style={{display:'flex',gap:9,alignItems:'center',flexWrap:'wrap'}}>
+              <span className={"status s-"+a.status}>{a.status}</span>
+              <select className="field" style={{padding:'7px 10px',width:'auto',margin:0}} defaultValue="" onChange={e=>{ if(e.target.value!=='') changeStatus(a.id,e.target.value); }}>
+                <option value="">Promeni status…</option>
+                {STATUS.map(s=><option key={s.v} value={s.v}>{s.label}</option>)}
+              </select>
+              {(a.status==='Reviewed'||a.status==='Accepted') &&
+                <button className="btn btn-ghost btn-sm" onClick={()=>setInterviewFor(a.id)}>+ Intervju</button>}
+              <button className="btn btn-ghost btn-sm" style={{borderColor:'var(--blue)',color:'var(--blue)'}}
+                onClick={()=>screenOne(a.id)} disabled={screeningBusy===a.id}>
+                {screeningBusy===a.id?<span className="loader dark"></span>:'🤖 Analiziraj'}
+              </button>
+            </div>
+          </div>
+
+          {a.interviews && a.interviews.length>0 && (
+            <div style={{marginTop:14,borderTop:'1px solid var(--line)',paddingTop:12}}>
+              <div style={{fontSize:12,fontWeight:600,color:'var(--muted)',marginBottom:8}}>Intervjui</div>
+              {a.interviews.map(iv=>(
+                <div key={iv.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10,
+                  background:'var(--panel-2)',border:'1px solid var(--line)',borderRadius:10,padding:'9px 13px',marginBottom:7}}>
+                  <div style={{fontSize:13}}>
+                    <b>{iv.type}</b> · {new Date(iv.scheduledAt).toLocaleString('sr-RS')} · <span style={{color:'var(--muted)'}}>{iv.location}</span>
+                    <span className={"status s-"+iv.status} style={{marginLeft:8,fontSize:10}}>{iv.status}</span>
+                  </div>
+                  <button className="btn btn-danger btn-sm" onClick={()=>delInterview(iv.id)}>Ukloni</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+
+      {interviewFor && <ScheduleModal appId={interviewFor} call={call} notify={notify} onClose={()=>{setInterviewFor(null);load();}}/>}
+
+      {/* MODAL - detaljan izvestaj jednog kandidata */}
+      {screeningReport && (
+        <Modal onClose={()=>setScreeningReport(null)} title="AI Screening izveštaj" subtitle="Automatska procena kandidata">
+          {/* SCORE + VERDICT */}
+          <div style={{display:'flex',gap:16,alignItems:'center',marginBottom:14,padding:14,
+            background:verdiktBoja[screeningReport.verdict]+'18',borderRadius:12}}>
+            <div style={{fontSize:42,fontWeight:700,fontFamily:'var(--serif)',color:verdiktBoja[screeningReport.verdict],lineHeight:1}}>
+              {screeningReport.match_score}
+            </div>
+            <div>
+              <div style={{fontSize:15,fontWeight:700,color:verdiktBoja[screeningReport.verdict]}}>
+                {verdiktEmoji[screeningReport.verdict]} {screeningReport.verdict.toUpperCase()}
+              </div>
+              <div style={{fontSize:12,color:'var(--muted)',marginTop:2}}>
+                {screeningReport.seniority} · {screeningReport.years_experience} god. komercijalnog iskustva
+              </div>
+            </div>
+          </div>
+
+          {/* SAZETAK */}
+          <div style={{fontSize:13,lineHeight:1.7,background:'var(--panel-2)',borderRadius:10,padding:12,marginBottom:14}}>
+            {screeningReport.summary}
+          </div>
+
+          {/* OBAVEZNI ISPUNJENI */}
+          {screeningReport.must_have_met?.length>0 && <div style={{marginBottom:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--green)',marginBottom:5,letterSpacing:.5}}>✔ OBAVEZNI USLOVI — ISPUNJENI</div>
+            {screeningReport.must_have_met.map((s,i)=>(
+              <div key={i} style={{fontSize:12,padding:'3px 0',color:'var(--text)'}}>+ {s}</div>
+            ))}
+          </div>}
+
+          {/* OBAVEZNI NEDOSTAJU */}
+          {screeningReport.must_have_missing?.length>0 && <div style={{marginBottom:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--red)',marginBottom:5,letterSpacing:.5}}>✘ OBAVEZNI USLOVI — NEDOSTAJU</div>
+            {screeningReport.must_have_missing.map((s,i)=>(
+              <div key={i} style={{fontSize:12,padding:'3px 0',color:'var(--red)'}}>- {s}</div>
+            ))}
+          </div>}
+
+          {/* NICE TO HAVE */}
+          {screeningReport.nice_to_have_met?.length>0 && <div style={{marginBottom:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--accent)',marginBottom:5,letterSpacing:.5}}>⭐ POŽELJNI USLOVI — ISPUNJENI</div>
+            {screeningReport.nice_to_have_met.map((s,i)=>(
+              <div key={i} style={{fontSize:12,padding:'3px 0'}}>+ {s}</div>
+            ))}
+          </div>}
+
+          {/* PREDNOSTI */}
+          {screeningReport.strengths?.length>0 && <div style={{marginBottom:10}}>
+            <div style={{fontSize:11,fontWeight:700,color:'var(--blue)',marginBottom:5,letterSpacing:.5}}>💪 PREDNOSTI</div>
+            {screeningReport.strengths.map((s,i)=>(
+              <div key={i} style={{fontSize:12,padding:'3px 0'}}>+ {s}</div>
+            ))}
+          </div>}
+
+          {/* ZABRINUTOSTI */}
+          {screeningReport.concerns?.length>0
+            ? <div style={{marginBottom:10}}>
+                <div style={{fontSize:11,fontWeight:700,color:'var(--amber)',marginBottom:5,letterSpacing:.5}}>⚠ ZABRINUTOSTI</div>
+                {screeningReport.concerns.map((s,i)=>(
+                  <div key={i} style={{fontSize:12,padding:'3px 0',color:'var(--amber)'}}>! {s}</div>
+                ))}
+              </div>
+            : <div style={{fontSize:12,color:'var(--green)',marginBottom:10}}>✅ Nema zabrinutosti</div>
+          }
+
+          <hr className="sep"/>
+
+          {/* OBRAZLOZENJE */}
+          <div style={{fontSize:12,lineHeight:1.7,color:'var(--muted)'}}>
+            <b style={{color:'var(--text)'}}>Obrazloženje:</b><br/>
+            {screeningReport.reasoning}
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+function ScheduleModal({appId,call,notify,onClose}){
+  const [f,setF]=useState({type:0,location:'Online sastanak',scheduledAt:'',note:''}),[busy,setBusy]=useState(false);
+  const submit=async()=>{ if(!f.scheduledAt){ notify('Termin obavezan','Izaberi datum i vreme.','err'); return; } setBusy(true);
+    try{
+      const r=await call('POST','/interviews',{json:{applicationId:appId,type:+f.type,location:f.location,scheduledAt:new Date(f.scheduledAt).toISOString(),note:f.note}});
+      notify('Intervju zakazan',(r&&r.message)||'Uspešno.','ok'); onClose();
+    }catch(e){ notify('Greška',e.message,'err'); } finally{ setBusy(false); } };
+  return (
+    <Modal onClose={onClose} title="Zakaži intervju" subtitle={"za prijavu #"+appId}>
+      <div className="row">
+        <div className="field"><label>Tip</label><select value={f.type} onChange={e=>setF({...f,type:e.target.value})}>{ITYPE.map(t=><option key={t.v} value={t.v}>{t.label}</option>)}</select></div>
+        <div className="field"><label>Termin</label><input type="datetime-local" value={f.scheduledAt} onChange={e=>setF({...f,scheduledAt:e.target.value})}/></div>
+      </div>
+      <div className="field"><label>Lokacija / link</label><input value={f.location} onChange={e=>setF({...f,location:e.target.value})}/></div>
+      <div className="field"><label>Napomena</label><textarea rows="2" value={f.note} onChange={e=>setF({...f,note:e.target.value})}/></div>
+      <button className="btn btn-primary btn-block" onClick={submit} disabled={busy}>{busy?<span className="loader"></span>:'Zakaži'}</button>
+    </Modal>
+  );
+}
+
+function Modal({title,subtitle,children,onClose}){
+  return (
+    <div onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(40,30,20,.4)',backdropFilter:'blur(3px)',display:'flex',alignItems:'center',justifyContent:'center',padding:20,zIndex:70}}>
+      <div className="card fade" onClick={e=>e.stopPropagation()} style={{maxWidth:520,width:'100%',boxShadow:'var(--shadow)',maxHeight:'88vh',display:'flex',flexDirection:'column'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:16,flexShrink:0}}>
+          <div><h3 style={{marginBottom:2}}>{title}</h3>{subtitle&&<div className="sub" style={{margin:0}}>{subtitle}</div>}</div>
+          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+        </div>
+        <div style={{overflowY:'auto',flex:1,paddingRight:4}}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
